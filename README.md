@@ -1,6 +1,6 @@
-# Fencegate (temporary name)
+# BedrockOptimizer (temporary name)
 
-Fencegate ia a BDS mod based on LiteLoaderBDS, which works to reduce mspt without modify vanilla features.
+BedrockOptimizer ia a BDS mod based on LiteLoaderBDS, which works to reduce mspt without modify vanilla features.
 
 :warning: **This is just an early demo, there are may exist many imperfections, please use it with caution.**
 
