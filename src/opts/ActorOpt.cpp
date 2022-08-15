@@ -66,10 +66,10 @@ THook(void, "?push@PushableComponent@@QEAAXAEAVActor@@AEBVVec3@@@Z", void *comp,
 //    original(s);
 //}
 
-THook(void, "?_updateMobTravel@Mob@@SAXAEAUIMobMovementProxy@@@Z", void *self, void *p) {
-    rmt_ScopedCPUSample(UpdateMobTravel, 0);
-    original(self, p);
-}
+// THook(void, "?_updateMobTravel@Mob@@SAXAEAUIMobMovementProxy@@@Z", void *self, void *p) {
+//     rmt_ScopedCPUSample(UpdateMobTravel, 0);
+//     original(self, p);
+// }
 
 // THook(void, "?normalTick@Actor@@UEAAXXZ", void *s) {
 //     rmt_ScopedCPUSample(ActorNormalTick, 0);

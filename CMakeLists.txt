@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 project(BetterBDS)
 set(CMAKE_CXX_STANDARD 17)
 
-set(TARGET_NAME BetterBDS)
+set(TARGET_NAME BedrockOptimizer)
 file(
         GLOB_RECURSE
         SRC_FILES_DIR
