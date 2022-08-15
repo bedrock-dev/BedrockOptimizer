@@ -15,6 +15,8 @@ namespace trapdoor {
         bool componentRemove = false;
         bool actorPush = false;
         bool hopper = false;
+
+        void readConfig();
     };
 
     BetterBDSMod &mod();

@@ -14,7 +14,7 @@ file(
         src/Plugin.cpp
         src/OptCommand.cpp
         src/BetterBDSMod.cpp
-
+        src/Config.cpp
 
         src/remotery/Remotery.c
         src/opts/HopperOpt.cpp
