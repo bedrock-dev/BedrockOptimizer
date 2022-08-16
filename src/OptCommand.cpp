@@ -36,10 +36,15 @@ namespace trapdoor {
         command->mandatory("opt", ParamType::Enum, hopperEnum,
                            CommandParameterOption::EnumAutocompleteExpansion);
 
+        auto &randomTickEnum = command->setEnum("randomtick", {"randomtick"});
+        command->mandatory("opt", ParamType::Enum, randomTickEnum,
+                           CommandParameterOption::EnumAutocompleteExpansion);
+
         command->optional("onoroff", ParamType::Bool);
         command->addOverload({redstoneEnum, "onoroff"});
         command->addOverload({actorEnum, "onoroff"});
         command->addOverload({hopperEnum, "onoroff"});
+        command->addOverload({randomTickEnum, "onoroff"});
 
         auto cb = [](DynamicCommand const &command, CommandOrigin const &origin,
                      CommandOutput &output,
@@ -66,6 +71,13 @@ namespace trapdoor {
                         queryValue("hopper", trapdoor::mod().hopper, output);
                     } else {
                         setValue("hopper", trapdoor::mod().hopper, opt, output);
+                    }
+                    break;
+                case do_hash("randomtick"):
+                    if (query) {
+                        queryValue("randomtick", trapdoor::mod().randomTick, output);
+                    } else {
+                        setValue("randomtick", trapdoor::mod().randomTick, opt, output);
                     }
                     break;
             }

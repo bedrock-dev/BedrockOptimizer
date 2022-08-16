@@ -15,7 +15,7 @@ namespace trapdoor {
         bool componentRemove = false;
         bool actorPush = false;
         bool hopper = false;
-
+        bool randomTick = false;
         void readConfig();
     };
 
