@@ -129,21 +129,25 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
     return change;
 }
 
-THook(bool, "?isStackable@ItemStackBase@@QEBA_NAEBV1@@Z", ItemStackBase *self,
-      const ItemStackBase *other) {
-    if (self->getId() == 0 || other->getId() == 0) {
-        return original(self, other);
-    }
-    if (self->getMaxStackSize() == 1) {
-        return false;
-    }
-
-    // tr::logger().debug("{} check stackable with {}", self->getName(), other->getName());
-    auto res = original(self, other);
-    return res;
-}
+// THook(bool, "?isStackable@ItemStackBase@@QEBA_NAEBV1@@Z", ItemStackBase *self,
+//       const ItemStackBase *other) {
+//     if (self->getId() == 0 || other->getId() == 0) {
+//         return original(self, other);
+//     }
+//     if (self->getMaxStackSize() == 1) {
+//         return false;
+//     }
+//
+//     // tr::logger().debug("{} check stackable with {}", self->getName(), other->getName());
+//     auto res = original(self, other);
+//     return res;
+// }
 THook(bool, "?_isFullContainer@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@H@Z", Hopper *hopper,
       BlockSource &bs, Container &container, int face) {
+    if (!trapdoor::mod().hopper) {
+        return original(hopper, bs, container, face);
+    }
+
     auto sz = container.getSize();
     for (int i = 0; i < sz; i++) {
         auto &item = container.getItem(i);

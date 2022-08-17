@@ -17,6 +17,7 @@ namespace trapdoor {
         bool hopper = false;
         bool randomTick = false;
         void readConfig();
+        void dumpConfig() const;
     };
 
     BetterBDSMod &mod();
