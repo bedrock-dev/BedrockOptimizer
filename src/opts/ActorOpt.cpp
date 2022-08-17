@@ -9,11 +9,6 @@
 
 THook(void, "?push@PushableComponent@@QEAAXAEAVActor@@AEBVVec3@@@Z", void *comp, void *a1,
       const Vec3 &v) {
-    auto actorPush = trapdoor::mod().actorPush;
-    if (!actorPush) {
-        original(comp, a1, v);
-    }
-
     if (v != Vec3::ZERO) {
         original(comp, a1, v);
     }

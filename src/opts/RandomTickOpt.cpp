@@ -18,10 +18,6 @@
 // }
 
 THook(bool, "?shouldRandomTick@Block@@QEBA_NXZ", Block *block) {
-    if (!trapdoor::mod().randomTick) {
-        return original(block);
-    }
-
     auto id = block->getId();
     /*
      * -378 => minecraft:deepslate

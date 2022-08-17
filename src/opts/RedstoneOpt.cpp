@@ -66,12 +66,7 @@ struct TCircuitSceneGraph {
 static_assert(sizeof(ComponentItem) == 32);
 
 THook(void, "?removeComponent@CircuitSceneGraph@@AEAAXAEBVBlockPos@@@Z", void *g,
-      const BlockPos &p) {
-    if (trapdoor::mod().componentRemove) {
-        return;
-    }
-    original(g, p);
-}
+      const BlockPos &p) {}
 
 void optPendingRemoves(CircuitSceneGraph *graph) {
     // rmt_ScopedCPUSample(PendingRemoveAll, 0);
@@ -178,18 +173,6 @@ void optPendingRemoves(CircuitSceneGraph *graph) {
 
 THook(void, "?update@CircuitSceneGraph@@QEAAXPEAVBlockSource@@@Z", CircuitSceneGraph *self,
       void *bs) {
-    if (trapdoor::mod().componentRemove) {
-        optPendingRemoves(self);
-    }
+    optPendingRemoves(self);
     original(self, bs);
 }
-
-// THook(void, "?evaluateComponents@CircuitSystem@@AEAAX_N@Z", void *c, bool t) {
-//     if (t) {
-//         rmt_ScopedCPUSample(Evaluate_True, 0);
-//         original(c, t);
-//     } else {
-//         rmt_ScopedCPUSample(Evaluate_False, 0);
-//         original(c, t);
-//     }
-// }

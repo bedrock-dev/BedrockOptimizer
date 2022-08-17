@@ -99,15 +99,8 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
       Hopper *self, BlockSource &bs, Container &fromContainer, Vec3 const &v, int attachedFace,
       bool canPushItems) {
     auto *tHopper = reinterpret_cast<THopper *>(self);
-    if (tHopper->mIsEntity) return original(self, bs, fromContainer, v, attachedFace, canPushItems);
-
-    auto hma = trapdoor::mod().hopper;
-    if (!hma) {
-        return original(self, bs, fromContainer, v, attachedFace, canPushItems);
-    }
-
     // 漏斗矿车直接返回
-
+    if (tHopper->mIsEntity) return original(self, bs, fromContainer, v, attachedFace, canPushItems);
     auto pos = v.toBlockPos();
     auto aboveBlockPos = pos + BlockPos(0, 1, 0);
     auto &aboveBlock = bs.getBlock(aboveBlockPos);
@@ -151,10 +144,6 @@ THook(bool, "?isStackable@ItemStackBase@@QEBA_NAEBV1@@Z", ItemStackBase *self,
 }
 THook(bool, "?_isFullContainer@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@H@Z", Hopper *hopper,
       BlockSource &bs, Container &container, int face) {
-    auto hma = trapdoor::mod().hopper;
-    if (!hma) {
-        return original(hopper, bs, container, face);
-    }
     auto sz = container.getSize();
     for (int i = 0; i < sz; i++) {
         auto &item = container.getItem(i);
