@@ -13,22 +13,28 @@
 
 #include "BetterBDSMod.h"
 #include "HookAPI.h"
+struct HopperCache {
+    uint8_t valid : 8;
+    uint8_t empty : 4;
+    uint8_t full : 4;
+};
 
 struct THopper {
     int mCooldownTime = -1;
     bool mTransferedFromChestMinecart = false;
     bool mIsEntity = false;
-    uint8_t valid{};
-    uint8_t info{};
+    HopperCache cache{};
     int mMoveItemSpeed = 4;
 };
 
-namespace {
-    static_assert(sizeof(THopper) == 12);
+static_assert(sizeof(HopperCache) == 2);
+static_assert(sizeof(THopper) == 12);
 
-    std::pair<int8_t, int8_t> getHopperFullAndEmpty(Container &cont) {
-        int8_t emptySlot = 0;
-        int8_t fullSlot = 0;
+namespace {
+
+    void refreshHopperCache(Container &cont, THopper *hopper) {
+        uint8_t emptySlot = 0;
+        uint8_t fullSlot = 0;
         for (int i = 0; i < 5; i++) {
             auto &item = cont.getItem(i);
             if (item.getId() == 0) {
@@ -37,14 +43,8 @@ namespace {
                 fullSlot++;
             }
         }
-        return {emptySlot, fullSlot};
-    }
-
-    inline void getFullAndEmptyFromCache(THopper *p, uint8_t *full, uint8_t *empty) {
-        // 高四位empty 低四位full
-        uint8_t info = p->info;
-        *full = info >> 4u;
-        *empty = info & 0x0F;
+        hopper->cache.empty = emptySlot;
+        hopper->cache.full = fullSlot;
     }
 
     bool tryPullInItemsFromWorld(Hopper *hopper, BlockSource &bs, Container &cont,
@@ -53,26 +53,30 @@ namespace {
         return itemActor && hopper->_addItem(cont, *itemActor);
     }
 
-    bool HopperAction(Hopper *self, const std::pair<int8_t, int8_t> &slotInfo, bool canPushItems,
-                      BlockSource &bs, Container &cont, const Vec3 &v, bool above, int face) {
+    bool HopperAction(Hopper *self, const HopperCache &cache, bool canPushItems, BlockSource &bs,
+                      Container &cont, const Vec3 &v, bool above, int face) {
         auto changed = false;
         auto th = reinterpret_cast<THopper *>(self);
         // 有物品且对着容器就往下送物品
-        if (canPushItems && slotInfo.first < 5) {
+        if (canPushItems && cache.empty < 5) {
             changed = self->_pushOutItems(bs, cont, v, face);
         }
 
         th->mTransferedFromChestMinecart = false;
         // 漏斗是满的的就直接返回
-        if (slotInfo.second == 5) {
+        if (cache.full == 5) {
             return changed;
         }
 
-        if (above) {
-            return changed | self->_tryPullInItemsFromAboveContainer(bs, cont, v);
-        } else {
-            return changed | tryPullInItemsFromWorld(self, bs, cont, v);
-        }
+        auto c1 = self->_tryPullInItemsFromAboveContainer(bs, cont, v);
+        auto c2 = !above && tryPullInItemsFromWorld(self, bs, cont, v);
+
+        return c1 || c2 || changed;
+        //        if (above) {
+        //            return self->_tryPullInItemsFromAboveContainer(bs, cont, v) || changed;
+        //        } else {
+        //            return tryPullInItemsFromWorld(self, bs, cont, v) || changed;
+        //        }
 
         //        if (!self->_tryPullInItemsFromAboveContainer(bs, cont, v)) {
         //            if (!above) {
@@ -82,8 +86,6 @@ namespace {
         //                return changed;
         //            }
         //        }
-
-        return true;
     }
 }  // namespace
 
@@ -91,7 +93,7 @@ THook(void, "?setItem@HopperBlockActor@@UEAAXHAEBVItemStack@@@Z", void *self, un
       ItemStackBase *itemStack) {
     auto &ba = dAccess<BlockActor, -200>(self);
     auto &hp = dAccess<Hopper, 424>(&ba);
-    reinterpret_cast<THopper *>(&hp)->valid = 0;
+    reinterpret_cast<THopper *>(&hp)->cache.valid = 0;
     original(self, index, itemStack);
 }
 
@@ -99,6 +101,7 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
       Hopper *self, BlockSource &bs, Container &fromContainer, Vec3 const &v, int attachedFace,
       bool canPushItems) {
     auto *tHopper = reinterpret_cast<THopper *>(self);
+    // 漏斗矿车直接返回
     if (tHopper->mIsEntity) return original(self, bs, fromContainer, v, attachedFace, canPushItems);
 
     auto hma = trapdoor::mod().hopper;
@@ -106,30 +109,31 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
         return original(self, bs, fromContainer, v, attachedFace, canPushItems);
     }
 
-    // 漏斗矿车直接返回
-
     auto pos = v.toBlockPos();
     auto aboveBlockPos = pos + BlockPos(0, 1, 0);
     auto &aboveBlock = bs.getBlock(aboveBlockPos);
+    //  bool aboveIsContainer = aboveBlock.getId() == 154;
     bool aboveIsContainer = aboveBlock.isContainerBlock();
+
+
+
+    //    if (aboveIsContainer) {
+    //        trapdoor::logger().debug("name: {} id: {}", aboveBlock.getTypeName(),
+    //        aboveBlock.getId());
+    //    }
+
+    //! reinterpret_cast<uint64_t>(&aboveBlock);
 
     //    auto dir = tr::facingToBlockPos(static_cast<tr::TFACING>(attachedFace));
     //    auto attachPos = BlockPos(pos.x + dir.x, pos.y + dir.y, pos.z + dir.z);
     //    auto attachIsContainer = bs.getBlock(attachPos).isContainerBlock();
     bool change = false;
-    if (tHopper->valid) {
-        uint8_t fullCnt = 0, emptyCnt = 0;
-        getFullAndEmptyFromCache(reinterpret_cast<THopper *>(self), &fullCnt, &emptyCnt);
-
-        change = HopperAction(self, {fullCnt, emptyCnt}, canPushItems, bs, fromContainer, v,
-                              aboveIsContainer, attachedFace);
-    } else {
-        auto slotInfo = getHopperFullAndEmpty(fromContainer);
-        tHopper->valid = true;
-        tHopper->info = (slotInfo.first << 4) | slotInfo.second;
-        change = HopperAction(self, slotInfo, canPushItems, bs, fromContainer, v, aboveIsContainer,
-                              attachedFace);
+    if (!tHopper->cache.valid) {
+        refreshHopperCache(fromContainer, tHopper);
+        tHopper->cache.valid = true;
     }
+    change = HopperAction(self, tHopper->cache, canPushItems, bs, fromContainer, v,
+                          aboveIsContainer, attachedFace);
     if (change) {
         tHopper->mCooldownTime = tHopper->mMoveItemSpeed;
     }
