@@ -13,6 +13,7 @@
 
 #include "BetterBDSMod.h"
 #include "HookAPI.h"
+
 struct HopperCache {
     uint8_t valid : 8;
     uint8_t empty : 4;
@@ -70,22 +71,7 @@ namespace {
 
         auto c1 = self->_tryPullInItemsFromAboveContainer(bs, cont, v);
         auto c2 = !above && tryPullInItemsFromWorld(self, bs, cont, v);
-
         return c1 || c2 || changed;
-        //        if (above) {
-        //            return self->_tryPullInItemsFromAboveContainer(bs, cont, v) || changed;
-        //        } else {
-        //            return tryPullInItemsFromWorld(self, bs, cont, v) || changed;
-        //        }
-
-        //        if (!self->_tryPullInItemsFromAboveContainer(bs, cont, v)) {
-        //            if (!above) {
-        //                auto res = tryPullInItemsFromWorld(self, bs, cont, v);
-        //                return res | changed;
-        //            } else {
-        //                return changed;
-        //            }
-        //        }
     }
 }  // namespace
 
@@ -112,21 +98,7 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
     auto pos = v.toBlockPos();
     auto aboveBlockPos = pos + BlockPos(0, 1, 0);
     auto &aboveBlock = bs.getBlock(aboveBlockPos);
-    //  bool aboveIsContainer = aboveBlock.getId() == 154;
     bool aboveIsContainer = aboveBlock.isContainerBlock();
-
-
-
-    //    if (aboveIsContainer) {
-    //        trapdoor::logger().debug("name: {} id: {}", aboveBlock.getTypeName(),
-    //        aboveBlock.getId());
-    //    }
-
-    //! reinterpret_cast<uint64_t>(&aboveBlock);
-
-    //    auto dir = tr::facingToBlockPos(static_cast<tr::TFACING>(attachedFace));
-    //    auto attachPos = BlockPos(pos.x + dir.x, pos.y + dir.y, pos.z + dir.z);
-    //    auto attachIsContainer = bs.getBlock(attachPos).isContainerBlock();
     bool change = false;
     if (!tHopper->cache.valid) {
         refreshHopperCache(fromContainer, tHopper);
@@ -140,31 +112,66 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
     return change;
 }
 
-// THook(bool, "?isStackable@ItemStackBase@@QEBA_NAEBV1@@Z", ItemStackBase *self,
-//       const ItemStackBase *other) {
-//     if (self->getId() == 0 || other->getId() == 0) {
-//         return original(self, other);
-//     }
-//     if (self->getMaxStackSize() == 1) {
-//         return false;
-//     }
-//
-//     // tr::logger().debug("{} check stackable with {}", self->getName(), other->getName());
-//     auto res = original(self, other);
-//     return res;
-// }
+// Container
+
 THook(bool, "?_isFullContainer@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@H@Z", Hopper *hopper,
-      BlockSource &bs, Container &container, int face) {
+      BlockSource &bs, Container &self, int face) {
     auto hma = trapdoor::mod().hopper;
     if (!hma) {
-        return original(hopper, bs, container, face);
+        return original(hopper, bs, self, face);
     }
-    auto sz = container.getSize();
-    for (int i = 0; i < sz; i++) {
-        auto &item = container.getItem(i);
-        if (item.isNull() || item.getId() == 0 || item.getCount() < item.getMaxStackSize()) {
-            return false;
-        }
+
+    auto &cache = dAccess<std::string, 184>(&self);
+    if (cache.size() == 4 && cache[2] == 1) {  // full cache有效
+        return cache[3] != 0;
+    } else {  // cache失效， 刷新cache
+        auto full = original(hopper, bs, self, face);
+        if (cache.size() != 4) cache = std::string(4, 0);  // 创建cache
+        cache[2] = 1;
+        cache[3] = full ? 1 : 0;
+        return full;
     }
-    return true;
+}
+THook(bool, "?_isEmptyContainer@Hopper@@IEAA_NAEAVContainer@@H@Z", Hopper *self, Container &c) {
+    auto hma = trapdoor::mod().hopper;
+    if (!hma) {
+        return original(self, c);
+    }
+    return c.isEmpty();
+}
+
+THook(bool, "?isEmpty@Container@@UEBA_NXZ", Container *self) {
+    auto hma = trapdoor::mod().hopper;
+    if (!hma) {
+        return original(self);
+    }
+
+    auto &cache = dAccess<std::string, 184>(self);
+    if (cache.size() == 4 && cache[0] == 1) {  // cache有效
+        return cache[1] != 0;
+    } else {  // cache失效， 刷新cache
+        auto isEmpty = original(self);
+        if (cache.size() != 4) cache = std::string(4, 0);  // 刷新cache
+        cache[0] = 1;
+        cache[1] = isEmpty ? 1 : 0;
+        return isEmpty;
+    }
+}
+
+THook(void, "?setContainerChanged@Container@@UEAAXH@Z", Container *self, unsigned int a2) {
+    // 让cache失效
+    auto hma = trapdoor::mod().hopper;
+    if (!hma) {
+        original(self, a2);
+        return;
+    }
+    // 0 empty valid
+    // 1 empty
+    // 2 full valid
+    // 3 full
+
+    auto &cache = dAccess<std::string, 184>(self);
+    if (cache.size() != 4) cache = std::string(4, 0);  // 创建cache
+    cache[0] = cache[2] = 0;                           // 设置失效
+    original(self, a2);
 }
