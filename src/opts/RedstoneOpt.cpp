@@ -126,7 +126,10 @@ void optPendingRemoves(CircuitSceneGraph *graph) {
                 auto updateComponent = allComp.second.get();
 
                 // 不是消费者才尝试移除
-                //  updateComponent->removeSource(pos, targetComp);
+                // 这里可以对中继器和比较器做一些特判，不是这些原件可以吧remove source挪动到后面
+                // 中继器的不能挪到后面是因为中继器的这个函数还会移除侧边原件，这些原件不是信号源
+                // 暂时先这么写，有空再优化
+                updateComponent->removeSource(pos, targetComp);
                 auto &ss = dAccess<std::vector<ComponentItem>, 8>(updateComponent);
                 auto ssit = ss.begin();
                 size_t res = 0;
@@ -134,14 +137,14 @@ void optPendingRemoves(CircuitSceneGraph *graph) {
                     if (ssit->mPos == pos || ssit->mComponent == targetComp) {
                         graph->scheduleRelationshipUpdate(allComp.first, updateComponent);
                         ss.erase(ssit);
+                        ++res;
                     } else {
                         ++ssit;
-                        ++res;
                     }
                 }
-                if (res != 0) {
-                    updateComponent->removeSource(pos, targetComp);
-                }
+                //                if (res != 0) {
+                //                    updateComponent->removeSource(pos, targetComp);
+                //                }
             }
         }
 
