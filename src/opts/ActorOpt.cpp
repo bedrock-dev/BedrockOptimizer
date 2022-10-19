@@ -1,10 +1,10 @@
 //
 // Created by xhy on 2022/7/17.
 //
-#include <MC/Actor.hpp>
+#include <llapi/mc/Actor.hpp>
 
 #include "BetterBDSMod.h"
-#include "HookAPI.h"
+#include "llapi/HookAPI.h"
 #include "Remotery.h"
 
 THook(void, "?push@PushableComponent@@QEAAXAEAVActor@@AEBVVec3@@@Z", void *comp, void *a1,

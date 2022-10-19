@@ -2,17 +2,18 @@
 // Created by xhy on 2022/8/8.
 //
 
-#include <MC/Block.hpp>
-#include <MC/BlockSource.hpp>
-#include <MC/Container.hpp>
-#include <MC/Hopper.hpp>
-#include <MC/Item.hpp>
-#include <MC/ItemStack.hpp>
+#include <llapi/mc/Block.hpp>
+#include <llapi/mc/BlockSource.hpp>
+#include <llapi/mc/Container.hpp>
+#include <llapi/mc/Hopper.hpp>
+#include <llapi/mc/Item.hpp>
+#include <llapi/mc/ItemStack.hpp>
+#include <llapi/mc/Vec3.hpp>
 #include <cctype>
 #include <cstdint>
 
 #include "BetterBDSMod.h"
-#include "HookAPI.h"
+#include "llapi/HookAPI.h"
 
 struct HopperCache {
     uint8_t valid : 8;

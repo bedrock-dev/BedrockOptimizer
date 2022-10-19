@@ -3,7 +3,7 @@
 //
 
 #include "BetterBDSMod.h"
-#include "DynamicCommandAPI.h"
+#include "llapi/DynamicCommandAPI.h"
 
 namespace trapdoor {
 
