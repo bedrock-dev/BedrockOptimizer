@@ -9,6 +9,6 @@
 
 // 添加要在此处预编译的标头
 #include <iostream>
-#include <Global.h>
+#include <llapi/Global.h>
 
 #endif //PCH_H

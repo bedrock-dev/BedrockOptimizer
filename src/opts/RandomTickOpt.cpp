@@ -1,10 +1,10 @@
 //
 // Created by xhy on 2022/8/16.
 //
-#include <MC/Block.hpp>
+#include <llapi/mc/Block.hpp>
 
 #include "BetterBDSMod.h"
-#include "HookAPI.h"
+#include "llapi/HookAPI.h"
 
 // THook(uint64_t, "?getHighestNonAirSubChunkIndex@LevelChunk@@QEBAFXZ", void *chunk) {
 //     //    auto r = original(chunk);

@@ -4,7 +4,7 @@
 
 #ifndef BETTERBDS_BETTERBDSMOD_H
 #define BETTERBDS_BETTERBDSMOD_H
-#include "LoggerAPI.h"
+#include "llapi/LoggerAPI.h"
 
 namespace trapdoor {
 

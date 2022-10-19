@@ -2,15 +2,15 @@
 // Created by xhy on 2022/7/14.
 //
 
-#include <HookAPI.h>
+#include <llapi/HookAPI.h>
 
-#include <MC/BaseCircuitComponent.hpp>
-#include <MC/CircuitComponentList.hpp>
-#include <MC/CircuitSceneGraph.hpp>
-#include <MC/Level.hpp>
+#include <llapi/mc/BaseCircuitComponent.hpp>
+#include <llapi/mc/CircuitComponentList.hpp>
+#include <llapi/mc/CircuitSceneGraph.hpp>
+#include <llapi/mc/Level.hpp>
 
 #include "BetterBDSMod.h"
-#include "Global.h"
+#include "llapi/Global.h"
 #include "Remotery.h"
 
 struct ComponentItem {
