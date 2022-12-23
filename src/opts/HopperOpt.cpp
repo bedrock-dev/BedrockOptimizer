@@ -115,24 +115,25 @@ THook(bool, "?_tryMoveItems@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@AEBVVe
 
 // Container
 
-THook(bool, "?_isFullContainer@Hopper@@IEAA_NAEAVBlockSource@@AEAVContainer@@H@Z", Hopper *hopper,
-      BlockSource &bs, Container &self, int face) {
+THook(bool, "?_isFullContainer@Hopper@@IEAA_NAEAVContainer@@H@Z", Hopper *hopper,
+      Container &self, int face) {
     auto hma = trapdoor::mod().hopper;
     if (!hma) {
-        return original(hopper, bs, self, face);
+        return original(hopper, self, face);
     }
 
     auto &cache = dAccess<std::string, 184>(&self);
     if (cache.size() == 4 && cache[2] == 1) {  // full cache有效
         return cache[3] != 0;
     } else {  // cache失效， 刷新cache
-        auto full = original(hopper, bs, self, face);
+        auto full = original(hopper, self, face);
         if (cache.size() != 4) cache = std::string(4, 0);  // 创建cache
         cache[2] = 1;
         cache[3] = full ? 1 : 0;
         return full;
     }
 }
+
 THook(bool, "?_isEmptyContainer@Hopper@@IEAA_NAEAVContainer@@H@Z", Hopper *self, Container &c) {
     auto hma = trapdoor::mod().hopper;
     if (!hma) {
